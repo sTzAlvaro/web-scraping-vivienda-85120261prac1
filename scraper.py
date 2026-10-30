@@ -5,10 +5,11 @@ import numpy as np
 import datetime
 import time
 import random
-import os
+import re
 
 NOW = datetime.datetime.now()
-BASE_URL = 'https://www.lucasfox.es/comprar-vivienda/espana.html'
+PURCHASE_URL = 'https://www.lucasfox.es/comprar-vivienda/espana.html'
+RENT_URL = 'https://www.lucasfox.es/alquilar-vivienda/espana.html'
 CSV_FILENAME = f'lucasfox_scraped_{NOW.strftime('%Y%m%d')}_{NOW.strftime('%H%M%S')}.csv'
 
 HEADERS = {
@@ -18,18 +19,27 @@ HEADERS = {
     'Referer': 'https://www.google.com/'
 }
 
+total_properties_df = pd.DataFrame()
 
-def scrape_lucasfox(max_pages=50):
+def scrape_lucasfox(rent=False):
     properties_df = pd.DataFrame()
-    print(f' ********** A screapear: {BASE_URL} ********** ')
+    base_url = RENT_URL if rent else PURCHASE_URL
+    response = requests.get(base_url, timeout=15, impersonate='chrome120')
+    soup = BeautifulSoup(response.text, 'html.parser')
+    #print(type(str(soup.find('span', class_='listing-pagination__status'))))
+    paging = list(map(int, re.findall(r'\d+', str(soup.find('span', class_='listing-pagination__status')))))
+    max_pages = max(paging)
+    print(f' ********** A screapear: {base_url} ********** ')
+    print(f'Total de páginas de búsqueda: {max_pages}')
+
 
     for page in range(1, max_pages + 1):
         print(f'Página {page}...')
 
         if page == 1:
-            url = BASE_URL
+            url = base_url
         else:
-            url = f"{BASE_URL}?page={page}"
+            url = f"{base_url}?page={page}"
 
         # 1. Hasta que encuentre un fallo en la página (o trate de scrapear más páginas de las que hay)
         #    el bot sigue.
@@ -55,7 +65,7 @@ def scrape_lucasfox(max_pages=50):
                     print(f"Error 404, clásico. Fin del scraping.")
                     break
 
-                # Cualquier otro error lleva a excepción, si todo está ok, rompe el bucle y sigue
+                # Cualquier otro error lleva a excepción, si está ok, rompe el bucle y sigue
                 response.raise_for_status()
                 break
             except requests.exceptions.RequestException as e:
@@ -77,9 +87,8 @@ def scrape_lucasfox(max_pages=50):
 
         for listing in listings:
             property_data = {}
-
             # Ubicación
-            location_tag = listing.find('span', class__='property-card__meta')
+            location_tag = listing.find('span', class_='property-card__meta')
             property_data['ubicacion'] = location_tag.text.strip() if location_tag else np.nan
 
             # Precio (en Euros)
@@ -98,7 +107,8 @@ def scrape_lucasfox(max_pages=50):
             description_tag = listing.find('p', class_='property-card__title')
             property_data['descripcion'] = description_tag.text.strip() if description_tag else np.nan
 
-            print(property_data)
+            property_data['tipo_transaccion'] = 'alquiler' if rent else 'compra'
+
             if property_data:
                 property_data_df = pd.DataFrame([property_data])
                 properties_df = pd.concat([properties_df, property_data_df], ignore_index=True)
@@ -107,13 +117,19 @@ def scrape_lucasfox(max_pages=50):
 
         # El random para que no todos los delays sean exactamente iguales y prevenir detección
         # Puede que dos segundos sea igual demasiado rápido?
-        delay = 2.0 + random.uniform(0.1, 1.5)
+        delay = 10 + random.uniform(-1.5, 1.5)
         print(f"Delay de ~{delay:.2f} segundos...\n")
         time.sleep(delay)
 
-    properties_df.to_csv(CSV_FILENAME, index=False, encoding='utf-8-sig')
+    return properties_df
 
+def data_output(data:pd.DataFrame):
+    data.to_csv(CSV_FILENAME, index=False, encoding='utf-8-sig')
+    print(f"Scraping completado, datos disponibles en: {CSV_FILENAME}.")
 
 if __name__ == "__main__":
-    scrape_lucasfox(208)
-    print(f"Scraping completado, datos de propiedades disponibles en: {CSV_FILENAME}.")
+    purchase_prop_df = scrape_lucasfox()
+    total_properties_df = pd.concat([total_properties_df, purchase_prop_df], ignore_index=True)
+    rent_prop_df = scrape_lucasfox(True)
+    total_properties_df = pd.concat([total_properties_df, rent_prop_df], ignore_index=True)
+    data_output(total_properties_df)
