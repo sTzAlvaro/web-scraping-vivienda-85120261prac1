@@ -1,0 +1,3 @@
+﻿ubicacion,precio,dormitorios,baños,plano,tamaño parcela,descripcion,tipo_transaccion,terraza,finalización,superficie construida
+Muestra la ubicación de la propiedad,Valor en euros,Número de habitaciones,Número de baños,Superficie construida,Superficie de la parcela,Resumen de los datos de la propiedad,Alquiler o compra,Superfice terraza,Fin de la obra,Superficie construida
+"String por provincia, region y barrio",Núm. entero,Núm. entero,Núm. entero,Núm. metros cuadrados,Núm. metros cuadrados,"String, sin estructura","String, binario",Núm. metros cuadrados,Trimestre y año,Núm. metros cuadrados
