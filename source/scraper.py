@@ -45,12 +45,13 @@ def scrape_lucasfox(rent=False):
         while True:
             try:
                 # Con esta librería, impersonate se encarga del header. No muy buena práctica, pero pregunté a Gemini si
-                # había alguna forma de saltarse las restricciones y me la recomendó (no funciona, pero te olvidas de
-                # gestionar el header!
+                # había alguna forma de saltarse las restricciones y me la recomendó (no funciona para lo que intentaba
+                # con Idealista o similares, pero no hay que gestionar el header.
+
                 response = requests.get(url, timeout=15, impersonate='chrome120')
 
                 # Intentando hacer scraping de algunas páginas tipo Idealista, Fotocasa, Thinkspain...
-                # me encontré con varios de estos códigos.
+                # nos encontramos con varios de estos códigos.
                 if response.status_code == 429:
                     print(f'Error 429: Scraping demasiado rápido... Delay de un minuto.')
                     time.sleep(60 + random.uniform(0.1, 30.5))
@@ -116,6 +117,7 @@ def scrape_lucasfox(rent=False):
 
         # El random para que no todos los delays sean exactamente iguales y prevenir detección
         # Puede que dos segundos sea igual demasiado rápido?
+        # De hecho la pagina tiene clausula de 10s por request
         delay = 10 + random.uniform(-1.5, 1.5)
         print(f"Delay de ~{delay:.2f} segundos...\n")
         time.sleep(delay)
