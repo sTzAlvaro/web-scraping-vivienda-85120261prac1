@@ -12,10 +12,9 @@ PURCHASE_URL = 'https://www.lucasfox.es/comprar-vivienda/espana.html'
 RENT_URL = 'https://www.lucasfox.es/alquilar-vivienda/espana.html'
 CSV_FILENAME = f'lucasfox_scraped_{NOW.strftime('%Y%m%d')}_{NOW.strftime('%H%M%S')}.csv'
 
+# Al final no se utiliza pues usamos curl_cffi
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    'Accept-Language': 'en-US,en;q=0.9',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
     'Referer': 'https://www.google.com/'
 }
 
